@@ -1,5 +1,238 @@
 <!DOCTYPE html>
-<!-- O código completo foi preparado anteriormente e será mantido aqui para consistência -->
 <html lang="pt-br">
-<!-- ... código HTML completo do jogo com as alterações feitas anteriormente ... -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Conexo - Movimentos Sociais</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #7b4f27;
+      color: #f1f5f9;
+      text-align: center;
+      padding: 20px;
+      transition: background-color 0.5s ease;
+    }
+    .grid, .grupo-correto {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    .word {
+      border: 2px solid #334155;
+      background: #d1d5db;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      user-select: none;
+      color: black;
+    }
+    .selected {
+      background-color: #60a5fa;
+      color: white;
+    }
+    .correct {
+      background-color: #22c55e !important;
+      color: white;
+      pointer-events: none;
+    }
+    .incorrect {
+      background-color: #ef4444 !important;
+      color: white;
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .explicacoes {
+      display: none;
+      background-color: #f5f5dc;
+      color: #1e293b;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 8px;
+      text-align: left;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .explicacoes h3 {
+      margin-top: 1em;
+      color: #7b4f27;
+    }
+  </style>
+</head>
+<body>
+  <h1>Conexo: Movimentos Sociais</h1>
+  <p>Agrupe 4 palavras com algo em comum</p>
+  <div class="grid" id="grid"></div>
+  <div id="gruposCertos"></div>
+  <button onclick="verificarGrupo()">Verificar Grupo</button>
+
+  <div class="explicacoes" id="explicacoes">
+    <h2>Explicações:</h2>
+    <div id="conteudoExplicacoes"></div>
+  </div>
+
+  <script>
+    const palavras = [
+      { texto: "Bertha Lutz", grupo: "Sufragista" },
+      { texto: "Voto feminino", grupo: "Sufragista" },
+      { texto: "Federação pelo Progresso Feminino", grupo: "Sufragista" },
+      { texto: "Constituição de 1932", grupo: "Sufragista" },
+
+      { texto: "Passeata dos Cem Mil", grupo: "UNE" },
+      { texto: "Ditadura", grupo: "UNE" },
+      { texto: "Liberdade de expressão", grupo: "UNE" },
+      { texto: "Cara-pintada", grupo: "UNE" },
+
+      { texto: "Racismo estrutural", grupo: "MNU" },
+      { texto: "Abdias do Nascimento", grupo: "MNU" },
+      { texto: "Zumbi dos Palmares", grupo: "MNU" },
+      { texto: "Cotas raciais", grupo: "MNU" },
+
+      { texto: "Parada do Orgulho", grupo: "LGBTQIA+" },
+      { texto: "Criminalização da LGBTfobia", grupo: "LGBTQIA+" },
+      { texto: "João W. Nery", grupo: "LGBTQIA+" },
+      { texto: "Identidade de gênero", grupo: "LGBTQIA+" },
+
+      { texto: "Reforma agrária", grupo: "MST" },
+      { texto: "Ocupação", grupo: "MST" },
+      { texto: "Assentamento", grupo: "MST" },
+      { texto: "João Pedro Stédile", grupo: "MST" }
+    ];
+
+    const explicacoes = {
+      "Sufragista": [
+        "<strong>Bertha Lutz</strong>: Líder do movimento sufragista brasileiro.",
+        "<strong>Voto feminino</strong>: Conquista legal das mulheres em 1932.",
+        "<strong>Federação pelo Progresso Feminino</strong>: Organização liderada por Bertha Lutz.",
+        "<strong>Constituição de 1932</strong>: Primeira a garantir o voto feminino no Brasil."
+      ],
+      "UNE": [
+        "<strong>Passeata dos Cem Mil</strong>: Grande protesto contra a ditadura em 1968.",
+        "<strong>Ditadura</strong>: Contexto histórico da repressão à UNE.",
+        "<strong>Liberdade de expressão</strong>: Valor defendido pelos estudantes.",
+        "<strong>Cara-pintada</strong>: Movimento estudantil contra Collor em 1992."
+      ],
+      "MNU": [
+        "<strong>Racismo estrutural</strong>: Discriminação arraigada na sociedade brasileira.",
+        "<strong>Abdias do Nascimento</strong>: Intelectual e ativista do movimento negro.",
+        "<strong>Zumbi dos Palmares</strong>: Símbolo da resistência negra.",
+        "<strong>Cotas raciais</strong>: Políticas afirmativas defendidas pelo MNU."
+      ],
+      "LGBTQIA+": [
+        "<strong>Parada do Orgulho</strong>: Evento anual em defesa da diversidade sexual.",
+        "<strong>Criminalização da LGBTfobia</strong>: Conquista legal recente.",
+        "<strong>João W. Nery</strong>: Primeiro homem trans a publicar autobiografia no Brasil.",
+        "<strong>Identidade de gênero</strong>: Como a pessoa se identifica socialmente."
+      ],
+      "MST": [
+        "<strong>Reforma agrária</strong>: Redistribuição de terras improdutivas.",
+        "<strong>Ocupação</strong>: Estratégia de luta do MST para pressionar o governo.",
+        "<strong>Assentamento</strong>: Território conquistado e organizado pelo MST.",
+        "<strong>João Pedro Stédile</strong>: Uma das principais lideranças do MST."
+      ]
+    };
+
+    palavras.sort(() => Math.random() - 0.5);
+
+    const grid = document.getElementById("grid");
+    const gruposCertos = document.getElementById("gruposCertos");
+    const selecionadas = [];
+    let gruposConcluidos = [];
+
+    palavras.forEach((palavra, index) => {
+      const div = document.createElement("div");
+      div.className = "word";
+      div.innerText = palavra.texto;
+      div.dataset.index = index;
+      div.onclick = () => toggleSelecao(div, index);
+      grid.appendChild(div);
+    });
+
+    function toggleSelecao(elemento, index) {
+      const i = selecionadas.indexOf(index);
+      if (i > -1) {
+        selecionadas.splice(i, 1);
+        elemento.classList.remove("selected");
+      } else if (selecionadas.length < 4) {
+        selecionadas.push(index);
+        elemento.classList.add("selected");
+      }
+    }
+
+    function verificarGrupo() {
+      if (selecionadas.length !== 4) {
+        alert("Selecione exatamente 4 palavras.");
+        return;
+      }
+
+      const grupos = selecionadas.map(i => palavras[i].grupo);
+      const mesmoGrupo = grupos.every(g => g === grupos[0]);
+
+      if (mesmoGrupo) {
+        const grupoNome = grupos[0];
+        gruposConcluidos.push(grupoNome);
+
+        const quadro = document.createElement("div");
+        quadro.className = "grupo-correto";
+        quadro.innerHTML = `<h3>${grupoNome}</h3>`;
+
+        selecionadas.forEach(i => {
+          const el = grid.querySelector(`[data-index='${i}']`);
+          if (el) {
+            const copia = el.cloneNode(true);
+            copia.classList.remove("selected");
+            copia.classList.add("correct");
+            quadro.appendChild(copia);
+            el.remove();
+          }
+        });
+
+        gruposCertos.appendChild(quadro);
+
+        if (gruposConcluidos.length === 5) {
+          document.body.style.backgroundColor = "#d8b4fe";
+          mostrarExplicacoes();
+        }
+      } else {
+        selecionadas.forEach(i => {
+          const el = grid.querySelector(`[data-index='${i}']`);
+          el.classList.add("incorrect");
+          setTimeout(() => el.classList.remove("incorrect"), 800);
+        });
+      }
+
+      selecionadas.length = 0;
+    }
+
+    function mostrarExplicacoes() {
+      const container = document.getElementById("conteudoExplicacoes");
+      const divExp = document.getElementById("explicacoes");
+      divExp.style.display = "block";
+      gruposConcluidos.forEach(grupo => {
+        const bloco = document.createElement("div");
+        bloco.innerHTML = `<h3>${grupo}</h3><ul>` + explicacoes[grupo].map(l => `<li>${l}</li>`).join("") + "</ul>";
+        container.appendChild(bloco);
+      });
+    }
+  </script>
+</body>
 </html>
